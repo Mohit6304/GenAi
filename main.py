@@ -69,7 +69,7 @@ if selected == 'ChatBot':
 
 def text2speech(text):
     API_URL = "https://api-inference.huggingface.co/models/facebook/mms-tts-eng"
-    headers = {"Authorization": "Bearer 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"}
+    headers = {"Authorization": "Bearer *************************************"}
     payload = {"inputs": text}
     response = requests.post(API_URL, headers=headers, json=payload)
     if response.status_code == 200:
