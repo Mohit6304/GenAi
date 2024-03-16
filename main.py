@@ -23,9 +23,9 @@ with st.sidebar:
     selected = option_menu('Syntax AI',
                            ['ChatBot',
                             'Story Generator',
-                            'Embed text',
-                            'Ask me anything'],
-                           menu_icon='robot', icons=['chat-dots-fill', 'image-fill', 'textarea-t', 'patch-question-fill'],
+                            'Comic Generator',
+                            'Video Generator'],
+                           menu_icon='robot', icons=['chat-dots-fill', 'book-fill', 'image-fill', 'play-fill'],
                            default_index=0
                            )
 
@@ -69,7 +69,7 @@ if selected == 'ChatBot':
 
 def text2speech(text):
     API_URL = "https://api-inference.huggingface.co/models/facebook/mms-tts-eng"
-    headers = {"Authorization": "Bearer *************************************"}
+    headers = {"Authorization": "Bearer *****************"}
     payload = {"inputs": text}
     response = requests.post(API_URL, headers=headers, json=payload)
     if response.status_code == 200:
@@ -109,12 +109,12 @@ if selected == "Story Generator":
 
 
 # text embedding model
-if selected == "Embed text":
+if selected == "Comic Generator":
 
-    st.title("🔡 Embed Text")
+    st.title("Generate a Comic")
 
     # text box to enter prompt
-    user_prompt = st.text_area(label='', placeholder="Enter the text to get embeddings")
+    user_prompt = st.text_area(label='', placeholder="Enter the story to generate comic...")
 
     if st.button("Get Response"):
         response = embeddings_model_response(user_prompt)
@@ -122,12 +122,12 @@ if selected == "Embed text":
 
 
 # text embedding model
-if selected == "Ask me anything":
+if selected == "Video Generator":
 
-    st.title("❓ Ask me a question")
+    st.title("Generate a Video")
 
     # text box to enter prompt
-    user_prompt = st.text_area(label='', placeholder="Ask me anything...")
+    user_prompt = st.text_area(label='', placeholder="Enter the story to generate video...")
 
     if st.button("Get Response"):
         response = gemini_pro_response(user_prompt)
