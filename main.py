@@ -9,6 +9,7 @@ from gemini_utility import (load_gemini_pro_model,
                             gemini_pro_response,
                             gemini_pro_vision_response,
                             embeddings_model_response)
+from gradio_client import Client
 
 
 working_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,8 +24,7 @@ with st.sidebar:
     selected = option_menu('Syntax AI',
                            ['ChatBot',
                             'Story Generator',
-                            'Comic Generator',
-                            'Video Generator'],
+                            'Comic Video Generator',],
                            menu_icon='robot', icons=['chat-dots-fill', 'book-fill', 'image-fill', 'play-fill'],
                            default_index=0
                            )
@@ -69,7 +69,7 @@ if selected == 'ChatBot':
 
 def text2speech(text):
     API_URL = "https://api-inference.huggingface.co/models/facebook/mms-tts-eng"
-    headers = {"Authorization": "Bearer *****************"}
+    headers = {"Authorization": "Bearer **"}
     payload = {"inputs": text}
     response = requests.post(API_URL, headers=headers, json=payload)
     if response.status_code == 200:
@@ -81,13 +81,18 @@ def text2speech(text):
         return None
 
 # Image captioning page
+# Story Generator page
 if selected == "Story Generator":
 
     st.title("📷 Snap Narrate")
 
+    # Allow users to upload an image
     uploaded_image = st.file_uploader("Upload an image...", type=["jpg", "jpeg", "png"])
-
-    if st.button("Generate Story"):
+    
+    # Input field for user's text
+    user_text = st.text_area("Provide some details or a theme for the story...")
+    
+    if st.button("Generate Story") and uploaded_image is not None and user_text != "":
         image = Image.open(uploaded_image)
 
         col1, col2 = st.columns(2)
@@ -95,40 +100,46 @@ if selected == "Story Generator":
         with col1:
             resized_img = image.resize((800, 500))
             st.image(resized_img)
+        
+        # Concatenating user's text with the default prompt
+        # Ensure that your gemini_pro_vision_response function can accept and correctly process the text input alongside the image
+        default_prompt = f"Given the image and the following details: '{user_text}', write a short story below 20 lines with a moral."
 
-        default_prompt = "write a short below 20 lines children story with morale for this image"  # change this prompt as per your requirement
-
-        # get the caption of the image from the gemini-pro-vision LLM
+        # Assuming gemini_pro_vision_response can take an additional argument for text
+        # If your actual function does not support this, you will need to adjust it accordingly
         caption = gemini_pro_vision_response(default_prompt, image)
 
         with col2:
             st.info(caption)
             audio_bytes = text2speech(caption)
+            if audio_bytes is not None:
+                st.audio(audio_bytes, format="audio/ogg")
+                
+    elif st.button("Generate Story only with text") and uploaded_image is None and user_text != "":
+        default_prompt = f"using the following details: '{user_text}', write a short story below 20 lines with a moral."
+        caption = gemini_pro_response(default_prompt)
+        st.info(caption)
+        audio_bytes = text2speech(caption)
+        if audio_bytes is not None:
             st.audio(audio_bytes, format="audio/ogg")
-     
+
 
 
 # text embedding model
-if selected == "Comic Generator":
+if selected == "Comic Video Generator":
 
     st.title("Generate a Comic")
 
     # text box to enter prompt
     user_prompt = st.text_area(label='', placeholder="Enter the story to generate comic...")
 
-    if st.button("Get Response"):
+    if st.button("Generate Comic"):
         response = embeddings_model_response(user_prompt)
-        st.markdown(response)
+        client = Client("ADOPLE/Video-Generator-AI")
+        result = client.predict(
+            user_prompt,	# str  in 'Comics Text' Textbox component
+            api_name="/generate_video"
+        )
+        video_data = result['video']
+        st.video(video_data)
 
-
-# text embedding model
-if selected == "Video Generator":
-
-    st.title("Generate a Video")
-
-    # text box to enter prompt
-    user_prompt = st.text_area(label='', placeholder="Enter the story to generate video...")
-
-    if st.button("Get Response"):
-        response = gemini_pro_response(user_prompt)
-        st.markdown(response)
